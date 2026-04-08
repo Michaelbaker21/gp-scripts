@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{overflow:hidden;}
+.wrap{position:relative;width:100%;line-height:0;cursor:grab;user-select:none;touch-action:none;}
+.wrap img{display:block;width:100%;height:auto;}
+.overlay{position:absolute;top:0;left:0;width:100%;height:100%;clip-path:inset(0 50% 0 0);}
+.line{position:absolute;top:0;bottom:0;left:50%;border-left:2px dashed #f4c7d5;transform:translateX(-50%);pointer-events:none;}
+.handle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;background:#f4c7d5;display:flex;align-items:center;justify-content:center;}
+.pill{position:absolute;bottom:16px;font-size:16px;font-weight:600;font-family:sans-serif;color:#374171;background:#f4c7d5;padding:12px 32px;border-radius:20px;}
+</style>
+</head>
+<body>
+<div class="wrap" id="w">
+  <img src="https://www.giftpackaging.com.au/assets/images/custom-printedbags-after.webp" alt="Unprinted kraft and white paper bags" />
+  <img class="overlay" id="ov" src="https://www.giftpackaging.com.au/assets/images/custom-printedbags-before.webp" alt="Custom printed paper bags with branded logos" />
+  <div class="line" id="ln">
+    <div class="handle">
+      <svg width="38" height="20" viewBox="0 0 38 20" fill="none">
+        <path d="M11 3L4 10l7 7" stroke="#374171" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M27 3l7 7-7 7" stroke="#374171" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+  <span class="pill" style="left:16px;">Before</span>
+  <span class="pill" style="right:16px;">After</span>
+</div>
+<script>
+var w=document.getElementById('w');
+var ov=document.getElementById('ov');
+var ln=document.getElementById('ln');
+var a=false,interacted=false;
+
+function s(cx){
+  var r=w.getBoundingClientRect();
+  var p=Math.max(0,Math.min(100,(cx-r.left)/r.width*100));
+  ov.style.clipPath='inset(0 '+(100-p).toFixed(1)+'% 0 0)';
+  ln.style.left=p.toFixed(1)+'%';
+}
+
+w.addEventListener('pointerdown',function(e){interacted=true;a=true;w.style.cursor='grabbing';s(e.clientX);e.preventDefault();});
+window.addEventListener('pointermove',function(e){if(!a)return;s(e.clientX);});
+window.addEventListener('pointerup',function(){a=false;w.style.cursor='grab';});
+window.addEventListener('pointercancel',function(){a=false;});
+
+function shimmy(){
+  if(interacted)return;
+  var start=Date.now();
+  function tick(){
+    if(interacted)return;
+    var t=Math.min(1,(Date.now()-start)/1100);
+    var ease=t<0.3?t/0.3*-3:t<0.6?(t-0.3)/0.3*6-3:(t-0.6)/0.4*-3+3;
+    var p=50+ease;
+    ov.style.clipPath='inset(0 '+(100-p).toFixed(1)+'% 0 0)';
+    ln.style.left=p.toFixed(1)+'%';
+    if(t<1)requestAnimationFrame(tick);
+    else{ov.style.clipPath='inset(0 50% 0 0)';ln.style.left='50%';}
+  }
+  requestAnimationFrame(tick);
+}
+setTimeout(shimmy,1500);
+setInterval(function(){if(!interacted)shimmy();},5000);
+
+// Auto-resize iframe height
+function resize(){
+  var h=w.offsetHeight;
+  if(window.parent)window.parent.postMessage({iframeHeight:h},'*');
+}
+window.addEventListener('resize',resize);
+window.addEventListener('load',resize);
+</script>
+</body>
+</html>
